@@ -12,16 +12,16 @@ public class PlayerComponent extends Component {
     @Override
     public void onUpdate(double tpf) {
         acceleration.x += tpf * 10; // x speed calculation, default speed is around 5.6-ish
-        acceleration.y += tpf * 20;
+        acceleration.y += tpf * 30;
 
-        if (acceleration.y < -5)
+        if (acceleration.y < -8)
         {
-            acceleration.y = -5;
+            acceleration.y = -8;
         }
 
-        if (acceleration.y > 5)
+        if (acceleration.y > 8)
         {
-            acceleration.y = 5;
+            acceleration.y = 8;
         }
 
         if(acceleration.x >= 10)

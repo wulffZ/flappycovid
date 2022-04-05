@@ -25,7 +25,8 @@ import static flappycovid.EntityType.WALL;
 
 public class FlappyCovidApp extends GameApplication {
 
-    private PlayerComponent player_component;
+    private PlayerComponent player_component1;
+    private PlayerComponent player_component2;
     private boolean newGame = false;
 
     @Override
@@ -38,21 +39,37 @@ public class FlappyCovidApp extends GameApplication {
     }
 
     protected void initInput() {
-        getInput().addAction(new UserAction("Jump")
+        getInput().addAction(new UserAction("JumpPlayer1")
         {
             @Override
             protected void onActionBegin() {
-                player_component.jump(); // jump action, calls function in PlayerComponent
+                player_component1.jump(); // jump action, calls function in PlayerComponent
             }
-        }, KeyCode.W); // maps to W key
+        }, KeyCode.W); // maps to W key PLAYER 1
 
-        getInput().addAction(new UserAction("Dash")
+        getInput().addAction(new UserAction("JumpPlayer2")
         {
             @Override
             protected void onActionBegin() {
-                player_component.dash(); // dash action, calls function in PlayerComponent
+                player_component2.jump(); // jump action, calls function in PlayerComponent
             }
-        }, KeyCode.D); // maps to D key
+        }, KeyCode.UP); // maps to UP arrowkey PLAYER 2
+
+        getInput().addAction(new UserAction("DashPlayer1")
+        {
+            @Override
+            protected void onActionBegin() {
+                player_component1.dash(); // dash action, calls function in PlayerComponent
+            }
+        }, KeyCode.D); // maps to D key PLAYER 1
+
+        getInput().addAction(new UserAction("DashPlayer2")
+        {
+            @Override
+            protected void onActionBegin() {
+                player_component2.dash(); // dash action, calls function in PlayerComponent
+            }
+        }, KeyCode.RIGHT); // maps to D key PLAYER 2
     }
 
     @Override
@@ -73,7 +90,12 @@ public class FlappyCovidApp extends GameApplication {
     {
         onCollisionBegin(PLAYER1, WALL, (player, wall) ->
         {
-            newGame(); // initiates the phyiscs / collisions
+            newGame(); // initiates the phyiscs / collisions for player 1
+        });
+
+        onCollisionBegin(PLAYER2, WALL, (player, wall) ->
+        {
+            newGame(); // initiates the phyiscs / collisions for player 2
         });
     }
 
@@ -88,10 +110,6 @@ public class FlappyCovidApp extends GameApplication {
         uiScore.textProperty().bind(getip("score").asString());
 
         addUINode(uiScore);
-
-        Group dpadView = getInput().createVirtualDpadView();
-
-        addUINode(dpadView, 0, 625);
     }
 
     @Override
@@ -111,21 +129,36 @@ public class FlappyCovidApp extends GameApplication {
 
     private void initPlayers()
     {
-        player_component = new PlayerComponent();
+        player_component1 = new PlayerComponent();
+        player_component2 = new PlayerComponent();
 
-        Entity player = entityBuilder()
+        Entity player1 = entityBuilder()
                 .at(100, 100) // inits player at x 100 y 100
                 .type(PLAYER1) // type of player
                 .bbox(new HitBox(BoundingShape.box(70, 60)))
                 .view(texture("bird.png").toAnimatedTexture(2, Duration.seconds(0.5)).loop())
                 .collidable()
-                .with(player_component, new WallBuildingComponent())
+                .with(player_component1, new WallBuildingComponent())
                 .build();
 
         getGameScene().getViewport().setBounds(0, 0, Integer.MAX_VALUE, getAppHeight());
-        getGameScene().getViewport().bindToEntity(player, getAppWidth() / 3, getAppHeight() / 2);
+        getGameScene().getViewport().bindToEntity(player1, getAppWidth() / 3, getAppHeight() / 2);
 
-        spawnWithScale(player, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
+        spawnWithScale(player1, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
+
+        Entity player2 = entityBuilder()
+                .at(125, 125) // inits player at x 100 y 100
+                .type(PLAYER2) // type of player
+                .bbox(new HitBox(BoundingShape.box(70, 60)))
+                .view(texture("bird.png").toAnimatedTexture(2, Duration.seconds(0.5)).loop())
+                .collidable()
+                .with(player_component2, new WallBuildingComponent())
+                .build();
+
+        getGameScene().getViewport().setBounds(0, 0, Integer.MAX_VALUE, getAppHeight());
+        getGameScene().getViewport().bindToEntity(player2, getAppWidth() / 3, getAppHeight() / 2);
+
+        spawnWithScale(player2, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
     }
 
     public void newGame()
