@@ -3,6 +3,17 @@
 
 # Log file
 *.log
+logs/
+system/
+
+# IDEA
+.idea/
+*.iml
+out/
+
+# MAVEN
+dependency-reduced-pom.xml
+target/
 
 # BlueJ files
 *.ctxt
