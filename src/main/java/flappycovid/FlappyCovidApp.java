@@ -5,10 +5,8 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.input.UserAction;
-import com.almasb.fxgl.input.virtual.VirtualButton;
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
-import javafx.scene.Group;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -27,7 +25,8 @@ public class FlappyCovidApp extends GameApplication {
 
     private PlayerComponent player_component1;
     private PlayerComponent player_component2;
-    private boolean newGame = false;
+    private boolean player1_alive = true;
+    private boolean player2_alive = true;
 
     @Override
     protected void initSettings(GameSettings settings)
@@ -88,14 +87,14 @@ public class FlappyCovidApp extends GameApplication {
     @Override
     protected void initPhysics()
     {
-        onCollisionBegin(PLAYER1, WALL, (player, wall) ->
+        onCollisionBegin(PLAYER1, WALL, (player1, wall) ->
         {
-            newGame(); // initiates the phyiscs / collisions for player 1
+            kill(player1); // on collision with a entity player1 and wall, this player dies.
         });
 
-        onCollisionBegin(PLAYER2, WALL, (player, wall) ->
+        onCollisionBegin(PLAYER2, WALL, (player2, wall) ->
         {
-            newGame(); // initiates the phyiscs / collisions for player 2
+            kill(player2); // on collision with a entity player2 and wall, this player dies.
         });
     }
 
@@ -117,12 +116,9 @@ public class FlappyCovidApp extends GameApplication {
     {
         inc("score", +1);
 
-        if (geti("score") == 3000) {
-            newGame();
-        }
-
-        if (newGame) {
-            newGame = false;
+        if (!player1_alive && !player2_alive) {
+            player1_alive = true;
+            player2_alive = true;
             getGameController().startNewGame();
         }
     }
@@ -135,8 +131,8 @@ public class FlappyCovidApp extends GameApplication {
         Entity player1 = entityBuilder()
                 .at(100, 100) // inits player at x 100 y 100
                 .type(PLAYER1) // type of player
-                .bbox(new HitBox(BoundingShape.box(70, 60)))
-                .view(texture("bird.png").toAnimatedTexture(2, Duration.seconds(0.5)).loop())
+                .bbox(new HitBox(BoundingShape.box(50, 25)))
+                .view(texture("player1.png"))
                 .collidable()
                 .with(player_component1, new WallBuildingComponent())
                 .build();
@@ -149,8 +145,8 @@ public class FlappyCovidApp extends GameApplication {
         Entity player2 = entityBuilder()
                 .at(125, 125) // inits player at x 100 y 100
                 .type(PLAYER2) // type of player
-                .bbox(new HitBox(BoundingShape.box(70, 60)))
-                .view(texture("bird.png").toAnimatedTexture(2, Duration.seconds(0.5)).loop())
+                .bbox(new HitBox(BoundingShape.box(50, 25)))
+                .view(texture("player2.png"))
                 .collidable()
                 .with(player_component2, new WallBuildingComponent())
                 .build();
@@ -161,14 +157,22 @@ public class FlappyCovidApp extends GameApplication {
         spawnWithScale(player2, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
     }
 
-    public void newGame()
+    public void kill(Entity entity)
     {
-        newGame = true; // set newgame boolean to true
+        EntityType entity_type = (EntityType) entity.getType();
+
+        if(entity_type == PLAYER1) {
+            player1_alive = false;
+        }
+
+        if(entity_type == PLAYER2) {
+            player2_alive = false;
+        }
     }
 
     public void gameOver()
     {
-        // game over
+        showMessage("game over my dude");
     }
 
     public static void main(String[] args)

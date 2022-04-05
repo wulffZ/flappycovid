@@ -32,7 +32,7 @@ public class PlayerComponent extends Component {
         entity.translate(acceleration.x, acceleration.y);
 
         if (entity.getBottomY() > getAppHeight()) {
-            FXGL.<FlappyCovidApp>getAppCast().newGame();
+            FXGL.<FlappyCovidApp>getAppCast().kill(entity); // if the player hits the floor (the y of the player > the height of the app, kill the player)
         }
     }
 
