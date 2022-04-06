@@ -27,6 +27,8 @@ public class FlappyCovidApp extends GameApplication {
     private PlayerComponent player_component2;
     private boolean player1_alive = true;
     private boolean player2_alive = true;
+    private double dashcooldown_player1 = 0;
+    private double dashcooldown_player2 = 0;
 
     @Override
     protected void initSettings(GameSettings settings)
@@ -58,7 +60,12 @@ public class FlappyCovidApp extends GameApplication {
         {
             @Override
             protected void onActionBegin() {
-                player_component1.dash(); // dash action, calls function in PlayerComponent
+                if(dashcooldown_player1 > 0) {
+                    // todo: implement visual feedback
+                } else {
+                    player_component1.dash(); // dash action, calls function in PlayerComponent
+                    dashcooldown_player1 = 5;
+                }
             }
         }, KeyCode.D); // maps to D key PLAYER 1
 
@@ -66,7 +73,12 @@ public class FlappyCovidApp extends GameApplication {
         {
             @Override
             protected void onActionBegin() {
-                player_component2.dash(); // dash action, calls function in PlayerComponent
+                if(dashcooldown_player2 > 0) {
+                   // todo: implement visual feedback
+                } else {
+                    player_component2.dash(); // dash action, calls function in PlayerComponent
+                    dashcooldown_player2 = 5;
+                }
             }
         }, KeyCode.RIGHT); // maps to D key PLAYER 2
     }
@@ -115,6 +127,20 @@ public class FlappyCovidApp extends GameApplication {
     protected void onUpdate(double tpf)
     {
         inc("score", +1);
+        if(dashcooldown_player1 > 0) {
+            dashcooldown_player1 += -0.05;
+        } else {
+            dashcooldown_player1 = 0;
+        }
+
+        if(dashcooldown_player2 > 0) {
+            dashcooldown_player2 += -0.05;
+        } else {
+            dashcooldown_player2 = 0;
+        }
+
+        System.out.println(dashcooldown_player1);
+
 
         if (!player1_alive && !player2_alive) {
             player1_alive = true;
