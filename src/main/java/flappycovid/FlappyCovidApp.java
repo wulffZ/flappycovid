@@ -156,11 +156,11 @@ public class FlappyCovidApp extends GameApplication {
     protected void onUpdate(double tpf)
     {
         if(player1_alive) {
-            inc("scorePlayer1", +0.1); // if their alive, increase theyre score by 0.1
+            inc("scorePlayer1", +1); // if their alive, increase theyre score by 0.1
         }
 
         if(player2_alive) {
-            inc("scorePlayer2", +0.1); // if their alive, increase theyre score by 0.1
+            inc("scorePlayer2", +1); // if their alive, increase theyre score by 0.1
         }
 
         if(dashcooldown_player1 > 0) {
