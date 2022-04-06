@@ -26,6 +26,17 @@ import static flappycovid.EntityType.PLAYER2;
 import static flappycovid.EntityType.WALL;
 
 
+//Added by Bart for shooter
+import com.almasb.fxgl.app.GameApplication;
+import com.almasb.fxgl.app.GameSettings;
+import com.almasb.fxgl.core.math.FXGLMath;
+import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.input.UserAction;
+import com.almasb.fxgl.physics.CollisionHandler;
+import com.almasb.fxgl.physics.PhysicsWorld;
+import javafx.scene.input.MouseButton;
+import javafx.util.Duration;
+
 public class FlappyCovidApp extends GameApplication {
 
     private double appWidth;
@@ -90,6 +101,21 @@ public class FlappyCovidApp extends GameApplication {
                 }
             }
         }, KeyCode.RIGHT); // maps to D key PLAYER 2
+
+
+        getInput().addAction(new UserAction("Player1Shoot") {
+            @Override
+            protected void onActionBegin() {
+                getGameWorld().spawn("Bullet", getInput().getMouseXWorld(), getAppHeight() - 10);
+            }
+        }, KeyCode.S);
+
+        getInput().addAction(new UserAction("Player2Shoot") {
+            @Override
+            protected void onActionBegin() {
+                getGameWorld().spawn("Bullet", getInput().getMouseXWorld(), getAppHeight() - 10);
+            }
+        }, KeyCode.DOWN);
     }
 
     @Override
@@ -104,6 +130,8 @@ public class FlappyCovidApp extends GameApplication {
     protected void initGame()
     {
         initPlayers(); // initiates players
+
+        getGameWorld().addEntityFactory(new ShooterFactory());
     }
 
     @Override
