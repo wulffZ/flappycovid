@@ -23,8 +23,12 @@ import static flappycovid.EntityType.WALL;
 
 public class FlappyCovidApp extends GameApplication {
 
+    private double appWidth;
+    private double appHeight;
     private PlayerComponent player_component1;
     private PlayerComponent player_component2;
+    private Entity player1;
+    private Entity player2;
     private boolean player1_alive = true;
     private boolean player2_alive = true;
     private double dashcooldown_player1 = 0;
@@ -36,7 +40,7 @@ public class FlappyCovidApp extends GameApplication {
         settings.setWidth(1280); // 720p resolution
         settings.setHeight(720);
         settings.setTitle("FlappyCovid"); // game name
-        settings.setVersion("0.1"); // version
+        settings.setVersion("0.2"); // version
     }
 
     protected void initInput() {
@@ -154,32 +158,30 @@ public class FlappyCovidApp extends GameApplication {
         player_component1 = new PlayerComponent();
         player_component2 = new PlayerComponent();
 
-        Entity player1 = entityBuilder()
+        appWidth = getAppWidth() / 3;
+        appHeight = getAppHeight() / 2;
+
+        player1 = entityBuilder()
                 .at(100, 100) // inits player at x 100 y 100
                 .type(PLAYER1) // type of player
-                .bbox(new HitBox(BoundingShape.box(50, 25)))
+                .bbox(new HitBox(BoundingShape.box(5, 5)))
                 .view(texture("player1.png"))
                 .collidable()
                 .with(player_component1, new WallBuildingComponent())
                 .build();
 
-        getGameScene().getViewport().setBounds(0, 0, Integer.MAX_VALUE, getAppHeight());
-        getGameScene().getViewport().bindToEntity(player1, getAppWidth() / 3, getAppHeight() / 2);
-
-        spawnWithScale(player1, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
-
-        Entity player2 = entityBuilder()
+        player2 = entityBuilder()
                 .at(125, 125) // inits player at x 100 y 100
                 .type(PLAYER2) // type of player
-                .bbox(new HitBox(BoundingShape.box(50, 25)))
+                .bbox(new HitBox(BoundingShape.box(32, 32)))
                 .view(texture("player2.png"))
                 .collidable()
                 .with(player_component2, new WallBuildingComponent())
                 .build();
 
         getGameScene().getViewport().setBounds(0, 0, Integer.MAX_VALUE, getAppHeight());
-        getGameScene().getViewport().bindToEntity(player2, getAppWidth() / 3, getAppHeight() / 2);
-
+        getGameScene().getViewport().bindToEntity(player1, appWidth, appHeight);
+        spawnWithScale(player1, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
         spawnWithScale(player2, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
     }
 
@@ -189,10 +191,12 @@ public class FlappyCovidApp extends GameApplication {
 
         if(entity_type == PLAYER1) {
             player1_alive = false;
+            getGameScene().getViewport().bindToEntity(player2, appWidth, appHeight); // now make viewport follow remaining player 2
         }
 
         if(entity_type == PLAYER2) {
             player2_alive = false;
+            getGameScene().getViewport().bindToEntity(player1, appWidth, appHeight); // now make viewport follow remaining player 1
         }
     }
 
