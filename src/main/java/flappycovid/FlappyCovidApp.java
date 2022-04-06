@@ -45,7 +45,7 @@ public class FlappyCovidApp extends GameApplication {
         settings.setWidth(1280); // 720p resolution
         settings.setHeight(720);
         settings.setTitle("FlappyCovid"); // game name
-        settings.setVersion("0.2"); // version
+        settings.setVersion("0.3.1"); // version
     }
 
     protected void initInput() {
