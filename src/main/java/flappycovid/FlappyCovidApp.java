@@ -7,12 +7,17 @@ import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
+import javafx.collections.FXCollections;
+import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
@@ -117,6 +122,23 @@ public class FlappyCovidApp extends GameApplication {
     @Override
     protected void initUI()
     {
+        Map<String, Runnable> dialogs = new LinkedHashMap<>();
+        dialogs.put("Input", () -> getDialogService().showInputBox("This is an input box. You can type stuff...", answer -> System.out.println("You typed: "+ answer)));
+
+        ChoiceBox<String> cbDialogs = getUIFactoryService().newChoiceBox(FXCollections.observableArrayList(dialogs.keySet()));
+
+        cbDialogs.getSelectionModel().selectFirst();
+
+        Button btn = getUIFactoryService().newButton("Open");
+        btn.setOnAction(e -> {
+            String dialogType = cbDialogs.getSelectionModel().getSelectedItem();
+            if (dialogs.containsKey(dialogType)) {
+                dialogs.get(dialogType).run();
+            } else {
+                System.out.println("Unknown dialog type");
+            }
+        });
+
         Text uiScore = new Text("");
         uiScore.setFont(Font.font(72));
         uiScore.setTranslateX(getAppWidth() - 200);
@@ -125,6 +147,16 @@ public class FlappyCovidApp extends GameApplication {
         uiScore.textProperty().bind(getip("score").asString());
 
         addUINode(uiScore);
+
+        VBox vbox = new VBox(10);
+        vbox.setTranslateX(600);
+        vbox.getChildren().addAll(
+                getUIFactoryService().newText("Dialog Types", Color.BLACK, 18),
+                cbDialogs,
+                btn
+        );
+
+//        getGameScene().addUINode(vbox);
     }
 
     @Override
@@ -142,8 +174,6 @@ public class FlappyCovidApp extends GameApplication {
         } else {
             dashcooldown_player2 = 0;
         }
-
-        System.out.println(dashcooldown_player1);
 
 
         if (!player1_alive && !player2_alive) {
@@ -180,7 +210,7 @@ public class FlappyCovidApp extends GameApplication {
                 .build();
 
         getGameScene().getViewport().setBounds(0, 0, Integer.MAX_VALUE, getAppHeight());
-        getGameScene().getViewport().bindToEntity(player1, appWidth, appHeight);
+        getGameScene().getViewport().bindToEntity(player1, appWidth, appHeight); // by default, viewport is bound to player 1
         spawnWithScale(player1, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
         spawnWithScale(player2, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
     }
@@ -192,11 +222,13 @@ public class FlappyCovidApp extends GameApplication {
         if(entity_type == PLAYER1) {
             player1_alive = false;
             getGameScene().getViewport().bindToEntity(player2, appWidth, appHeight); // now make viewport follow remaining player 2
+            player1.setUpdateEnabled(false); // stop drawing entity player 1, leaving him in the wall
         }
 
         if(entity_type == PLAYER2) {
             player2_alive = false;
             getGameScene().getViewport().bindToEntity(player1, appWidth, appHeight); // now make viewport follow remaining player 1
+            player2.setUpdateEnabled(false); // stop drawing entity player 2, leaving him in the wall
         }
     }
 
