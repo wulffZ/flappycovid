@@ -1,13 +1,18 @@
 package flappycovid;
 
+import com.almasb.fxgl.achievement.Achievement;
 import com.almasb.fxgl.animation.Interpolators;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
+import com.almasb.fxgl.app.MenuItem;
+import com.almasb.fxgl.core.util.Platform;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
+import com.almasb.fxgl.ui.DialogBox;
 import javafx.collections.FXCollections;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.input.KeyCode;
@@ -17,6 +22,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -26,27 +33,24 @@ import static flappycovid.EntityType.PLAYER2;
 import static flappycovid.EntityType.WALL;
 
 
-//Added by Bart for shooter
-import com.almasb.fxgl.app.GameApplication;
-import com.almasb.fxgl.app.GameSettings;
-import com.almasb.fxgl.core.math.FXGLMath;
-import com.almasb.fxgl.entity.Entity;
-import com.almasb.fxgl.input.UserAction;
-import com.almasb.fxgl.physics.CollisionHandler;
-import com.almasb.fxgl.physics.PhysicsWorld;
-import javafx.scene.input.MouseButton;
-import javafx.util.Duration;
-
 public class FlappyCovidApp extends GameApplication {
 
+    private boolean logged_in = false;
     private double appWidth;
     private double appHeight;
+
     private PlayerComponent player_component1;
     private PlayerComponent player_component2;
+
     private Entity player1;
     private Entity player2;
+
     private boolean player1_alive = true;
     private boolean player2_alive = true;
+
+    private String player1_name = "";
+    private String player2_name = "";
+
     private double dashcooldown_player1 = 0;
     private double dashcooldown_player2 = 0;
 
@@ -57,6 +61,18 @@ public class FlappyCovidApp extends GameApplication {
         settings.setHeight(720);
         settings.setTitle("FlappyCovid"); // game name
         settings.setVersion("0.3.1"); // version
+
+        settings.setEnabledMenuItems(EnumSet.of(MenuItem.EXTRA));
+        settings.getCredits().addAll(Arrays.asList(
+                "Matthijs",
+                "Bart",
+                "Sanne",
+                "Wytze"
+        ));
+
+        settings.getAchievements().add(new Achievement("user_name", "description", "", 0));
+        settings.getAchievements().add(new Achievement("other_user_name", "description", "", 1));
+
     }
 
     protected void initInput() {
@@ -94,28 +110,13 @@ public class FlappyCovidApp extends GameApplication {
             @Override
             protected void onActionBegin() {
                 if(dashcooldown_player2 > 0) {
-                   // todo: implement visual feedback
+                    // todo: implement visual feedback
                 } else {
                     player_component2.dash(); // dash action, calls function in PlayerComponent
                     dashcooldown_player2 = 5;
                 }
             }
         }, KeyCode.RIGHT); // maps to D key PLAYER 2
-
-
-        getInput().addAction(new UserAction("Player1Shoot") {
-            @Override
-            protected void onActionBegin() {
-                getGameWorld().spawn("Bullet", getInput().getMouseXWorld(), getAppHeight() - 10);
-            }
-        }, KeyCode.S);
-
-        getInput().addAction(new UserAction("Player2Shoot") {
-            @Override
-            protected void onActionBegin() {
-                getGameWorld().spawn("Bullet", getInput().getMouseXWorld(), getAppHeight() - 10);
-            }
-        }, KeyCode.DOWN);
     }
 
     @Override
@@ -130,8 +131,37 @@ public class FlappyCovidApp extends GameApplication {
     protected void initGame()
     {
         initPlayers(); // initiates players
+    }
 
-        getGameWorld().addEntityFactory(new ShooterFactory());
+    public void initLogin()
+    {
+        getDialogService().showConfirmationBox("Do you want your score to be recorded?", answer -> {
+            System.out.println(answer);
+        });
+
+        getDialogService().showInputBox("Please input player 2 name.", name -> {
+            Text player1_text = new Text(name);
+            player1_text.setFont(Font.font(62));
+            player1_text.setTranslateX(getAppWidth() - 420);
+            player1_text.setTranslateY(120);
+
+            addUINode(player1_text);
+
+            player1_name = name;
+        });
+
+        getDialogService().showInputBox("Please input player 1 name.", name -> {
+            Text player2_text = new Text(name);
+            player2_text.setFont(Font.font(62));
+            player2_text.setTranslateX(getAppWidth() - 420);
+            player2_text.setTranslateY(60);
+
+            addUINode(player2_text);
+
+            player2_name = name;
+        });
+
+        logged_in = true;
     }
 
     @Override
@@ -151,16 +181,6 @@ public class FlappyCovidApp extends GameApplication {
     @Override
     protected void initUI()
     {
-        Text player1Alive = new Text("P1");
-        player1Alive.setFont(Font.font(62));
-        player1Alive.setTranslateX(getAppWidth() - 420);
-        player1Alive.setTranslateY(60);
-
-        Text player2Alive = new Text("P2");
-        player2Alive.setFont(Font.font(62));
-        player2Alive.setTranslateX(getAppWidth() - 420);
-        player2Alive.setTranslateY(120);
-
         Text scorePlayer1 = new Text("");
         scorePlayer1.setFont(Font.font(62));
         scorePlayer1.setTranslateX(getAppWidth() - 180);
@@ -173,9 +193,6 @@ public class FlappyCovidApp extends GameApplication {
         scorePlayer2.setTranslateY(60);
         scorePlayer2.textProperty().bind(getip("scorePlayer2").asString());
 
-        addUINode(player1Alive);
-        addUINode(player2Alive);
-
         addUINode(scorePlayer1);
         addUINode(scorePlayer2);
     }
@@ -183,6 +200,10 @@ public class FlappyCovidApp extends GameApplication {
     @Override
     protected void onUpdate(double tpf)
     {
+        if(!logged_in) {
+            initLogin();
+        }
+
         if(player1_alive) {
             inc("scorePlayer1", +1); // if their alive, increase theyre score by 0.1
         }
@@ -205,6 +226,7 @@ public class FlappyCovidApp extends GameApplication {
 
 
         if (!player1_alive && !player2_alive) { // reset game, both players area dead.
+            logged_in = false;
             player1_alive = true;
             player2_alive = true;
             getGameController().startNewGame();
