@@ -3,9 +3,9 @@ package flappycovid;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.entity.components.CollidableComponent;
-import javafx.scene.shape.Rectangle;
 
-import static com.almasb.fxgl.dsl.FXGL.entityBuilder;
+import static com.almasb.fxgl.dsl.FXGL.*;
+import static com.almasb.fxgl.dsl.FXGLForKtKt.getAssetLoader;
 
 public class WallBuildingComponent extends Component {
     private double previous_wall = 1000; // this where the default wall is first place, as to not insta-kill the players
@@ -17,12 +17,6 @@ public class WallBuildingComponent extends Component {
         }
     }
 
-    private Rectangle wallView(double width, double height) { // this funcion determines the wall style.
-        Rectangle wall = new Rectangle(width, height);
-        wall.fillProperty().bind(FXGL.getWorldProperties().objectProperty("stageColor")); // uses property in FlappyCovidApp to determine wall color
-        return wall;
-    }
-
     private void buildWalls() {
         double height = FXGL.getAppHeight(); // gets height of the game window.
         double distance = height / 2; // halfs height of game window
@@ -31,15 +25,15 @@ public class WallBuildingComponent extends Component {
             double topHeight = Math.random() * (height - distance);
 
             entityBuilder()
-                    .at(previous_wall + i * 500, 0 - 25) // in relation to the last wall, use the i from the for loop, times 500 to determine x placement. this is the top wall.
+                    .at(previous_wall + i * 500, 25) // in relation to the last wall, use the i from the for loop, times 500 to determine x placement. this is the top wall.
                     .type(EntityType.WALL)
-                    .viewWithBBox(wallView(50, topHeight))
+                    .viewWithBBox(FXGL.getAssetLoader().loadTexture("needle_down.png", 190, topHeight))
                     .with(new CollidableComponent(true))
                     .buildAndAttach();
             entityBuilder()
                     .at(previous_wall + i * 500, 0 + topHeight + distance + 25) // in relation to the last wall, use the i from the for loop, times 500 to determine x placement. this is the bottom wall.
                     .type(EntityType.WALL)
-                    .viewWithBBox(wallView(50, height - distance - topHeight))
+                    .viewWithBBox(FXGL.getAssetLoader().loadTexture("needle_up.png",190, height - distance - topHeight))
                     .with(new CollidableComponent(true))
                     .buildAndAttach();
         }
