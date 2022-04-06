@@ -95,8 +95,9 @@ public class FlappyCovidApp extends GameApplication {
     @Override
     protected void initGameVars(Map<String, Object> vars)
     {
-        vars.put("stageColor", Color.BLACK);
-        vars.put("score", 0);
+        vars.put("stageColor", Color.GREENYELLOW);
+        vars.put("scorePlayer1", 0);
+        vars.put("scorePlayer2", 0);
     }
 
     @Override
@@ -122,47 +123,46 @@ public class FlappyCovidApp extends GameApplication {
     @Override
     protected void initUI()
     {
-        Map<String, Runnable> dialogs = new LinkedHashMap<>();
-        dialogs.put("Input", () -> getDialogService().showInputBox("This is an input box. You can type stuff...", answer -> System.out.println("You typed: "+ answer)));
+        Text player1Alive = new Text("P1");
+        player1Alive.setFont(Font.font(62));
+        player1Alive.setTranslateX(getAppWidth() - 420);
+        player1Alive.setTranslateY(60);
 
-        ChoiceBox<String> cbDialogs = getUIFactoryService().newChoiceBox(FXCollections.observableArrayList(dialogs.keySet()));
+        Text player2Alive = new Text("P2");
+        player2Alive.setFont(Font.font(62));
+        player2Alive.setTranslateX(getAppWidth() - 420);
+        player2Alive.setTranslateY(120);
 
-        cbDialogs.getSelectionModel().selectFirst();
+        Text scorePlayer1 = new Text("");
+        scorePlayer1.setFont(Font.font(62));
+        scorePlayer1.setTranslateX(getAppWidth() - 180);
+        scorePlayer1.setTranslateY(120);
+        scorePlayer1.textProperty().bind(getip("scorePlayer1").asString());
 
-        Button btn = getUIFactoryService().newButton("Open");
-        btn.setOnAction(e -> {
-            String dialogType = cbDialogs.getSelectionModel().getSelectedItem();
-            if (dialogs.containsKey(dialogType)) {
-                dialogs.get(dialogType).run();
-            } else {
-                System.out.println("Unknown dialog type");
-            }
-        });
+        Text scorePlayer2 = new Text("");
+        scorePlayer2.setFont(Font.font(62));
+        scorePlayer2.setTranslateX(getAppWidth() - 180);
+        scorePlayer2.setTranslateY(60);
+        scorePlayer2.textProperty().bind(getip("scorePlayer2").asString());
 
-        Text uiScore = new Text("");
-        uiScore.setFont(Font.font(72));
-        uiScore.setTranslateX(getAppWidth() - 200);
-        uiScore.setTranslateY(50);
-        uiScore.fillProperty().bind(getop("stageColor"));
-        uiScore.textProperty().bind(getip("score").asString());
+        addUINode(player1Alive);
+        addUINode(player2Alive);
 
-        addUINode(uiScore);
-
-        VBox vbox = new VBox(10);
-        vbox.setTranslateX(600);
-        vbox.getChildren().addAll(
-                getUIFactoryService().newText("Dialog Types", Color.BLACK, 18),
-                cbDialogs,
-                btn
-        );
-
-//        getGameScene().addUINode(vbox);
+        addUINode(scorePlayer1);
+        addUINode(scorePlayer2);
     }
 
     @Override
     protected void onUpdate(double tpf)
     {
-        inc("score", +1);
+        if(player1_alive) {
+            inc("scorePlayer1", +1); // if their alive, increase theyre score by 0.1
+        }
+
+        if(player2_alive) {
+            inc("scorePlayer2", +1); // if their alive, increase theyre score by 0.1
+        }
+
         if(dashcooldown_player1 > 0) {
             dashcooldown_player1 += -0.05;
         } else {
@@ -176,7 +176,7 @@ public class FlappyCovidApp extends GameApplication {
         }
 
 
-        if (!player1_alive && !player2_alive) {
+        if (!player1_alive && !player2_alive) { // reset game, both players area dead.
             player1_alive = true;
             player2_alive = true;
             getGameController().startNewGame();
