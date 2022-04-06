@@ -25,7 +25,7 @@ public class WallBuildingComponent extends Component {
             double topHeight = Math.random() * (height - distance);
 
             entityBuilder()
-                    .at(previous_wall + i * 500, 25) // in relation to the last wall, use the i from the for loop, times 500 to determine x placement. this is the top wall.
+                    .at(previous_wall + i * 500, 0 - 25) // in relation to the last wall, use the i from the for loop, times 500 to determine x placement. this is the top wall.
                     .type(EntityType.WALL)
                     .viewWithBBox(FXGL.getAssetLoader().loadTexture("needle_down.png", 190, topHeight))
                     .with(new CollidableComponent(true))
