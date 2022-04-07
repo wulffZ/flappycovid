@@ -30,6 +30,8 @@ import static flappycovid.EntityType.WALL;
 
 public class FlappyCovidApp extends GameApplication {
 
+    private double time_alive = 0;
+
     private boolean logged_in = false;
     private double appWidth;
     private double appHeight;
@@ -51,6 +53,8 @@ public class FlappyCovidApp extends GameApplication {
 
     private double dashcooldown_player1 = 0;
     private double dashcooldown_player2 = 0;
+
+    private int current_level = 1;
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -75,40 +79,56 @@ public class FlappyCovidApp extends GameApplication {
         getInput().addAction(new UserAction("JumpPlayer1") {
             @Override
             protected void onActionBegin() {
-                player_component1.jump(); // jump action, calls function in PlayerComponent
+                player_component1.jump(0, -15); // jump action, calls function in PlayerComponent
             }
-        }, KeyCode.W); // maps to W key PLAYER 1
+        }, KeyCode.W);
 
         getInput().addAction(new UserAction("JumpPlayer2") {
             @Override
             protected void onActionBegin() {
-                player_component2.jump(); // jump action, calls function in PlayerComponent
+                player_component2.jump(0, -15); // jump action, calls function in PlayerComponent
             }
-        }, KeyCode.UP); // maps to UP arrowkey PLAYER 2
+        }, KeyCode.UP);
 
         getInput().addAction(new UserAction("DashPlayer1") {
             @Override
             protected void onActionBegin() {
-                if (dashcooldown_player1 > 0) {
-                    // todo: implement visual feedback
-                } else {
-                    player_component1.dash(); // dash action, calls function in PlayerComponent
-                    dashcooldown_player1 = 5;
+                if (dashcooldown_player1 == 0) {
+                    if(current_level == 1) {
+                        dashcooldown_player1 = 3;
+                        player_component1.dash(18); // long dash, low cooldown
+                    }
+                    else if(current_level == 2) {
+                        player_component1.dash(15); // shorter dash, longer cooldown.
+                        dashcooldown_player1 = 5;
+                    }
+                    else if(current_level == 3) {
+                        player_component1.dash(8); // extremely short dash, 10s cooldown. (HARD)
+                        dashcooldown_player1 = 10;
+                    }
                 }
             }
-        }, KeyCode.D); // maps to D key PLAYER 1
+        }, KeyCode.D);
 
         getInput().addAction(new UserAction("DashPlayer2") {
             @Override
             protected void onActionBegin() {
-                if (dashcooldown_player2 > 0) {
-                    // todo: implement visual feedback
-                } else {
-                    player_component2.dash(); // dash action, calls function in PlayerComponent
-                    dashcooldown_player2 = 5;
+                if (dashcooldown_player2 == 0) {
+                    if(current_level == 1) {
+                        dashcooldown_player2 = 3;
+                        player_component2.dash(18); // long dash, low cooldown
+                    }
+                    else if(current_level == 2) {
+                        player_component2.dash(15); // shorter dash, longer cooldown.
+                        dashcooldown_player2 = 5;
+                    }
+                    else if(current_level == 3) {
+                        player_component2.dash(8); // extremely short dash, 10s cooldown. (HARD)
+                        dashcooldown_player2 = 10;
+                    }
                 }
             }
-        }, KeyCode.RIGHT); // maps to D key PLAYER 2
+        }, KeyCode.RIGHT);
 
 
         onKey(KeyCode.S, () -> shootPlayer1());
@@ -125,6 +145,7 @@ public class FlappyCovidApp extends GameApplication {
         vars.put("stageColor", Color.GREENYELLOW);
         vars.put("scorePlayer1", 0);
         vars.put("scorePlayer2", 0);
+        vars.put("current_level", 1);
     }
 
     @Override
@@ -196,6 +217,19 @@ public class FlappyCovidApp extends GameApplication {
         scorePlayer2.setTranslateY(60);
         scorePlayer2.textProperty().bind(getip("scorePlayer2").asString());
 
+        Text level_text = new Text("Level");
+        level_text.setFont(Font.font(62));
+        level_text.setTranslateX(60);
+        level_text.setTranslateY(60);
+
+        Text current_level = new Text("");
+        current_level.setFont(Font.font(62));
+        current_level.setTranslateX(240);
+        current_level.setTranslateY(60);
+        current_level.textProperty().bind(getip("current_level").asString());
+
+        addUINode(level_text);
+        addUINode(current_level);
         addUINode(scorePlayer1);
         addUINode(scorePlayer2);
     }
@@ -246,11 +280,28 @@ public class FlappyCovidApp extends GameApplication {
 
     @Override
     protected void onUpdate(double tpf) {
+        time_alive += 0.02; // roughly every second, this counts up a whole.
+
         if (!logged_in) {
             if(!checkSession())
             {
                 initLogin();
             }
+        }
+
+        if(time_alive > 20 && time_alive < 20.02) {
+            current_level = 1;
+            inc("current_level", +1);
+        }
+
+        if(time_alive > 40 && time_alive < 40.02) {
+            current_level = 2;
+            inc("current_level", +1);
+        }
+
+        if(time_alive > 60 && time_alive < 60.02) {
+            current_level = 3;
+            inc("current_level", +1);
         }
 
         if (player1_alive) {
@@ -341,6 +392,7 @@ public class FlappyCovidApp extends GameApplication {
         player2_alive = true;
 
         logged_in = false;
+        current_level = 1;
         getGameController().startNewGame();
     }
 
@@ -354,7 +406,7 @@ public class FlappyCovidApp extends GameApplication {
         player1 = entityBuilder()
                 .at(100, 100) // inits player at x 100 y 100
                 .type(PLAYER1) // type of player
-                .bbox(new HitBox(BoundingShape.box(5, 5)))
+                .bbox(new HitBox(BoundingShape.circle(2)))
                 .view(texture("player1.png"))
                 .collidable()
                 .with(player_component1, new WallBuildingComponent())
@@ -363,7 +415,7 @@ public class FlappyCovidApp extends GameApplication {
         player2 = entityBuilder()
                 .at(125, 125) // inits player at x 100 y 100
                 .type(PLAYER2) // type of player
-                .bbox(new HitBox(BoundingShape.box(32, 32)))
+                .bbox(new HitBox(BoundingShape.circle(2)))
                 .view(texture("player2.png"))
                 .collidable()
                 .with(player_component2, new WallBuildingComponent())

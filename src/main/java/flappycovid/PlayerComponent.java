@@ -36,12 +36,12 @@ public class PlayerComponent extends Component {
         }
     }
 
-    public void jump() {
-        acceleration.addLocal(0, -15);
+    public void jump(int x, int y) {
+        acceleration.addLocal(x, -15);
     }
 
-    public void dash() {
-        acceleration.addLocal(18, 0);
+    public void dash(int x) {
+        acceleration.addLocal(x, 0);
         play("dash.mp3");
     }
 
