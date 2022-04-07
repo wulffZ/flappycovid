@@ -1,20 +1,26 @@
 package flappycovid;
 
-import com.almasb.fxgl.achievement.Achievement;
 import com.almasb.fxgl.animation.Interpolators;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.app.MenuItem;
 import com.almasb.fxgl.dsl.FXGL;
+import com.almasb.fxgl.dsl.views.ScrollingBackgroundView;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
+import com.almasb.fxgl.ui.FontFactory;
+import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
+
+import java.util.List;
+
+import static com.almasb.fxgl.dsl.FXGL.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -22,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
-import static com.almasb.fxgl.dsl.FXGL.*;
 import static flappycovid.EntityType.PLAYER1;
 import static flappycovid.EntityType.PLAYER2;
 import static flappycovid.EntityType.WALL;
@@ -70,12 +75,8 @@ public class FlappyCovidApp extends GameApplication {
                 "Sanne",
                 "Wytze"
         ));
-
-        settings.getAchievements().add(new Achievement("user_name", "description", "", 0));
-        settings.getAchievements().add(new Achievement("other_user_name", "description", "", 1));
     }
 
-    @Override
     protected void onPreInit() {
         loopBGM("theme_soundtrack.wav");
     }
@@ -160,11 +161,19 @@ public class FlappyCovidApp extends GameApplication {
         getGameWorld().addEntityFactory(new ShooterFactory());
     }
 
+    public Font getFont() {
+        FontFactory flappybirdy_font_factory = getAssetLoader().loadFont("FlappyBirdy.ttf");
+        Font flappybirdy = flappybirdy_font_factory.newFont(100);
+
+        return flappybirdy;
+    }
+
     protected void setPlayer1Name(String name) {
         Text player1_text = new Text(name);
         player1_text.setFont(Font.font(62));
         player1_text.setTranslateX(getAppWidth() - 420);
         player1_text.setTranslateY(120);
+        player1_text.setFont(getFont());
 
         addUINode(player1_text);
 
@@ -176,6 +185,7 @@ public class FlappyCovidApp extends GameApplication {
         player2_text.setFont(Font.font(62));
         player2_text.setTranslateX(getAppWidth() - 420);
         player2_text.setTranslateY(60);
+        player2_text.setFont(getFont());
 
         addUINode(player2_text);
 
@@ -214,23 +224,27 @@ public class FlappyCovidApp extends GameApplication {
         scorePlayer1.setFont(Font.font(62));
         scorePlayer1.setTranslateX(getAppWidth() - 180);
         scorePlayer1.setTranslateY(120);
+        scorePlayer1.setFont(getFont());
         scorePlayer1.textProperty().bind(getip("scorePlayer1").asString());
 
         Text scorePlayer2 = new Text("");
         scorePlayer2.setFont(Font.font(62));
         scorePlayer2.setTranslateX(getAppWidth() - 180);
         scorePlayer2.setTranslateY(60);
+        scorePlayer2.setFont(getFont());
         scorePlayer2.textProperty().bind(getip("scorePlayer2").asString());
 
         Text level_text = new Text("Level");
         level_text.setFont(Font.font(62));
         level_text.setTranslateX(60);
         level_text.setTranslateY(60);
+        level_text.setFont(getFont());
 
         Text current_level = new Text("");
         current_level.setFont(Font.font(62));
         current_level.setTranslateX(240);
         current_level.setTranslateY(60);
+        current_level.setFont(getFont());
         current_level.textProperty().bind(getip("current_level").asString());
 
         addUINode(level_text);
@@ -428,10 +442,16 @@ public class FlappyCovidApp extends GameApplication {
 
         getGameScene().getViewport().setBounds(0, 0, Integer.MAX_VALUE, getAppHeight());
         getGameScene().getViewport().bindToEntity(player1, appWidth, appHeight); // by default, viewport is bound to player 1
+
+        Node scrollview =  new ScrollingBackgroundView(texture("background.png",1200, 725));
+
+        entityBuilder()
+                .view(scrollview)
+                .buildAndAttach();
+
         spawnWithScale(player1, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
         spawnWithScale(player2, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
     }
-
 
     private void shootPlayer1() {
         spawn("bullet", player1.getPosition().add(70, 90));
@@ -455,10 +475,6 @@ public class FlappyCovidApp extends GameApplication {
             getGameScene().getViewport().bindToEntity(player1, appWidth, appHeight); // now make viewport follow remaining player 1
             player2.setUpdateEnabled(false); // stop drawing entity player 2, leaving him in the wall
         }
-    }
-
-    public void gameOver() {
-        showMessage("game over my dude");
     }
 
     public static void main(String[] args) {
