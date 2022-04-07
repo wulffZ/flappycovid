@@ -5,27 +5,22 @@ import com.almasb.fxgl.animation.Interpolators;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.app.MenuItem;
-import com.almasb.fxgl.core.util.Platform;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
-import com.almasb.fxgl.ui.DialogBox;
-import javafx.collections.FXCollections;
-import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+
+import java.util.function.Consumer;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 import static flappycovid.EntityType.PLAYER1;
@@ -48,6 +43,8 @@ public class FlappyCovidApp extends GameApplication {
     private boolean player1_alive = true;
     private boolean player2_alive = true;
 
+    private boolean record_score = false;
+
     private String player1_name = "";
     private String player2_name = "";
 
@@ -55,8 +52,7 @@ public class FlappyCovidApp extends GameApplication {
     private double dashcooldown_player2 = 0;
 
     @Override
-    protected void initSettings(GameSettings settings)
-    {
+    protected void initSettings(GameSettings settings) {
         settings.setWidth(1280); // 720p resolution
         settings.setHeight(720);
         settings.setTitle("FlappyCovid"); // game name
@@ -76,27 +72,24 @@ public class FlappyCovidApp extends GameApplication {
     }
 
     protected void initInput() {
-        getInput().addAction(new UserAction("JumpPlayer1")
-        {
+        getInput().addAction(new UserAction("JumpPlayer1") {
             @Override
             protected void onActionBegin() {
                 player_component1.jump(); // jump action, calls function in PlayerComponent
             }
         }, KeyCode.W); // maps to W key PLAYER 1
 
-        getInput().addAction(new UserAction("JumpPlayer2")
-        {
+        getInput().addAction(new UserAction("JumpPlayer2") {
             @Override
             protected void onActionBegin() {
                 player_component2.jump(); // jump action, calls function in PlayerComponent
             }
         }, KeyCode.UP); // maps to UP arrowkey PLAYER 2
 
-        getInput().addAction(new UserAction("DashPlayer1")
-        {
+        getInput().addAction(new UserAction("DashPlayer1") {
             @Override
             protected void onActionBegin() {
-                if(dashcooldown_player1 > 0) {
+                if (dashcooldown_player1 > 0) {
                     // todo: implement visual feedback
                 } else {
                     player_component1.dash(); // dash action, calls function in PlayerComponent
@@ -105,11 +98,10 @@ public class FlappyCovidApp extends GameApplication {
             }
         }, KeyCode.D); // maps to D key PLAYER 1
 
-        getInput().addAction(new UserAction("DashPlayer2")
-        {
+        getInput().addAction(new UserAction("DashPlayer2") {
             @Override
             protected void onActionBegin() {
-                if(dashcooldown_player2 > 0) {
+                if (dashcooldown_player2 > 0) {
                     // todo: implement visual feedback
                 } else {
                     player_component2.dash(); // dash action, calls function in PlayerComponent
@@ -120,53 +112,58 @@ public class FlappyCovidApp extends GameApplication {
     }
 
     @Override
-    protected void initGameVars(Map<String, Object> vars)
-    {
+    protected void initGameVars(Map<String, Object> vars) {
         vars.put("stageColor", Color.GREENYELLOW);
         vars.put("scorePlayer1", 0);
         vars.put("scorePlayer2", 0);
     }
 
     @Override
-    protected void initGame()
-    {
+    protected void initGame() {
         initPlayers(); // initiates players
     }
 
-    public void initLogin()
-    {
+    protected void setPlayer1Name(String name) {
+        Text player1_text = new Text(name);
+        player1_text.setFont(Font.font(62));
+        player1_text.setTranslateX(getAppWidth() - 420);
+        player1_text.setTranslateY(120);
+
+        addUINode(player1_text);
+
+        player1_name = name;
+    }
+
+    protected void setPlayer2Name(String name) {
+        Text player2_text = new Text(name);
+        player2_text.setFont(Font.font(62));
+        player2_text.setTranslateX(getAppWidth() - 420);
+        player2_text.setTranslateY(60);
+
+        addUINode(player2_text);
+
+        player2_name = name;
+        System.out.println(player1_name);
+    }
+
+    public void initLogin() {
         getDialogService().showConfirmationBox("Do you want your score to be recorded?", answer -> {
+            logged_in = true;
+            initSession();
             System.out.println(answer);
         });
 
         getDialogService().showInputBox("Please input player 2 name.", name -> {
-            Text player1_text = new Text(name);
-            player1_text.setFont(Font.font(62));
-            player1_text.setTranslateX(getAppWidth() - 420);
-            player1_text.setTranslateY(120);
-
-            addUINode(player1_text);
-
-            player1_name = name;
+            setPlayer2Name(name);
         });
 
         getDialogService().showInputBox("Please input player 1 name.", name -> {
-            Text player2_text = new Text(name);
-            player2_text.setFont(Font.font(62));
-            player2_text.setTranslateX(getAppWidth() - 420);
-            player2_text.setTranslateY(60);
-
-            addUINode(player2_text);
-
-            player2_name = name;
+            setPlayer1Name(name);
         });
-
-        logged_in = true;
     }
 
     @Override
-    protected void initPhysics()
-    {
+    protected void initPhysics() {
         onCollisionBegin(PLAYER1, WALL, (player1, wall) ->
         {
             kill(player1); // on collision with a entity player1 and wall, this player dies.
@@ -179,8 +176,7 @@ public class FlappyCovidApp extends GameApplication {
     }
 
     @Override
-    protected void initUI()
-    {
+    protected void initUI() {
         Text scorePlayer1 = new Text("");
         scorePlayer1.setFont(Font.font(62));
         scorePlayer1.setTranslateX(getAppWidth() - 180);
@@ -197,28 +193,92 @@ public class FlappyCovidApp extends GameApplication {
         addUINode(scorePlayer2);
     }
 
+
+    public void initSession() {
+        String player_names = player1_name + "," + player2_name;
+        try {
+            FileWriter fileWriter = new FileWriter("session.txt");
+            PrintWriter printwriter = new PrintWriter(fileWriter);
+            printwriter.print(player_names);
+            printwriter.close();
+        } catch (IOException err) {
+            System.out.println(err);
+        }
+    }
+
+    public boolean checkSession() {
+        try {
+            File session = new File("session.txt");
+            if(session.exists()) {
+                String result = String.valueOf(Files.readAllLines(Paths.get("session.txt")));
+                String names[] = result.split(",");
+
+                names[0] = names[0].replaceAll("[\\(\\)\\[\\]\\{\\}]","");
+                names[1] = names[1].replaceAll("[\\(\\)\\[\\]\\{\\}]","");
+
+                setPlayer1Name(names[0]);
+                setPlayer2Name(names[1]);
+
+                logged_in = true;
+                return true;
+            } else {
+                return false;
+            }
+        } catch (IOException err) {
+            System.out.println(err);
+        }
+        return false;
+    }
+
+    public void killSession() {
+        File session = new File("session.txt");
+        if (session.exists()) {
+            session.delete(); // remove session file, thus resetting the game's player data.
+        }
+    }
+
+    private void restart() {
+        logged_in = false;
+        player1_alive = true;
+        player2_alive = true;
+
+        killSession();
+
+        getGameController().startNewGame();
+    }
+
+    private void retry() {
+        player1_alive = true;
+        player2_alive = true;
+
+        logged_in = false;
+        getGameController().startNewGame();
+    }
+
     @Override
-    protected void onUpdate(double tpf)
-    {
-        if(!logged_in) {
-            initLogin();
+    protected void onUpdate(double tpf) {
+        if (!logged_in) {
+            if(!checkSession())
+            {
+                initLogin();
+            }
         }
 
-        if(player1_alive) {
+        if (player1_alive) {
             inc("scorePlayer1", +1); // if their alive, increase theyre score by 0.1
         }
 
-        if(player2_alive) {
+        if (player2_alive) {
             inc("scorePlayer2", +1); // if their alive, increase theyre score by 0.1
         }
 
-        if(dashcooldown_player1 > 0) {
+        if (dashcooldown_player1 > 0) {
             dashcooldown_player1 += -0.05;
         } else {
             dashcooldown_player1 = 0;
         }
 
-        if(dashcooldown_player2 > 0) {
+        if (dashcooldown_player2 > 0) {
             dashcooldown_player2 += -0.05;
         } else {
             dashcooldown_player2 = 0;
@@ -226,15 +286,19 @@ public class FlappyCovidApp extends GameApplication {
 
 
         if (!player1_alive && !player2_alive) { // reset game, both players area dead.
-            logged_in = false;
-            player1_alive = true;
-            player2_alive = true;
-            getGameController().startNewGame();
+            getDialogService().showConfirmationBox("Do you want to retry", yes ->
+            {
+                if (yes) {
+                    retry();
+                } else {
+                    restart();
+                }
+            });
+
         }
     }
 
-    private void initPlayers()
-    {
+    private void initPlayers() {
         player_component1 = new PlayerComponent();
         player_component2 = new PlayerComponent();
 
@@ -265,30 +329,27 @@ public class FlappyCovidApp extends GameApplication {
         spawnWithScale(player2, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
     }
 
-    public void kill(Entity entity)
-    {
+    public void kill(Entity entity) {
         EntityType entity_type = (EntityType) entity.getType();
 
-        if(entity_type == PLAYER1) {
+        if (entity_type == PLAYER1) {
             player1_alive = false;
             getGameScene().getViewport().bindToEntity(player2, appWidth, appHeight); // now make viewport follow remaining player 2
             player1.setUpdateEnabled(false); // stop drawing entity player 1, leaving him in the wall
         }
 
-        if(entity_type == PLAYER2) {
+        if (entity_type == PLAYER2) {
             player2_alive = false;
             getGameScene().getViewport().bindToEntity(player1, appWidth, appHeight); // now make viewport follow remaining player 1
             player2.setUpdateEnabled(false); // stop drawing entity player 2, leaving him in the wall
         }
     }
 
-    public void gameOver()
-    {
+    public void gameOver() {
         showMessage("game over my dude");
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         launch(args); // launch game
     }
 }
