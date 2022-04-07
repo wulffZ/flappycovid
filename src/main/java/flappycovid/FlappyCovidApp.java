@@ -110,6 +110,11 @@ public class FlappyCovidApp extends GameApplication {
             }
         }, KeyCode.RIGHT); // maps to D key PLAYER 2
 
+
+        onKey(KeyCode.S, () -> shootPlayer1());
+        onKey(KeyCode.DOWN, () -> shootPlayer2());
+
+
         FXGL.onKey(KeyCode.TAB, () -> {
             getDialogService().showMessageBox(String.join("\n", getHighscores()));
         });
@@ -125,6 +130,8 @@ public class FlappyCovidApp extends GameApplication {
     @Override
     protected void initGame() {
         initPlayers(); // initiates players
+
+        getGameWorld().addEntityFactory(new ShooterFactory());
     }
 
     protected void setPlayer1Name(String name) {
@@ -366,6 +373,14 @@ public class FlappyCovidApp extends GameApplication {
         getGameScene().getViewport().bindToEntity(player1, appWidth, appHeight); // by default, viewport is bound to player 1
         spawnWithScale(player1, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
         spawnWithScale(player2, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
+    }
+
+    private void shootPlayer1() {
+        spawn("bullet", player1.getPosition().add(70, 0));
+    }
+
+    private void shootPlayer2() {
+        spawn("bullet", player2.getPosition().add(70, 0));
     }
 
     public void kill(Entity entity) {

@@ -42,5 +42,7 @@ public class PlayerComponent extends Component {
 
     public void dash() {
         acceleration.addLocal(18, 0);
+        play("dash.mp3");
     }
+
 }

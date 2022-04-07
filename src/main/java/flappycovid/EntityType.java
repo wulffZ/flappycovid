@@ -1,5 +1,5 @@
 package flappycovid;
 
 public enum EntityType {
-    WALL, PLAYER1, PLAYER2
+    WALL, PLAYER1, PLAYER2, BULLET
 }
