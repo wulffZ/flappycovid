@@ -428,14 +428,6 @@ public class FlappyCovidApp extends GameApplication {
     }
 
 
-//    private void shootPlayer1(Entity entity) {
-//        EntityType entity_type = (EntityType) entity.getType();
-//        if (entity_type == PLAYER1) {
-//            player1_alive = true;
-//            spawn("bullet", player1.getPosition().add(70, 90));
-//        }
-//    }
-
     private void shootPlayer1() {
         spawn("bullet", player1.getPosition().add(70, 90));
     }
