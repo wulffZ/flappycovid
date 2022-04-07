@@ -8,12 +8,6 @@ import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.physics.box2d.dynamics.BodyType;
 import com.almasb.fxgl.physics.box2d.dynamics.FixtureDef;
 import javafx.geometry.Point2D;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
-
-import static com.almasb.fxgl.dsl.FXGL.texture;
-import static com.almasb.fxgl.dsl.FXGL.*;
-import static com.almasb.fxgl.dsl.FXGLForKtKt.getAssetLoader;
 
 
 public class ShooterFactory implements EntityFactory {
@@ -35,8 +29,6 @@ public class ShooterFactory implements EntityFactory {
                 .viewWithBBox(FXGL.getAssetLoader().loadTexture("bullet.png", 40, 40))
                 .with(new CollidableComponent(true))
                 .with(new ProjectileComponent(new Point2D(25, 0), 900))
-                //.with(physics)
-                //.with(new ExpireCleanComponent(Duration.seconds(4)))
                 .build();
 
     }
