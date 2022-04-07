@@ -11,6 +11,10 @@ import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import static com.almasb.fxgl.dsl.FXGL.texture;
+import static com.almasb.fxgl.dsl.FXGL.*;
+import static com.almasb.fxgl.dsl.FXGLForKtKt.getAssetLoader;
+
 
 public class ShooterFactory implements EntityFactory {
 
@@ -28,11 +32,12 @@ public class ShooterFactory implements EntityFactory {
 
         return FXGL.entityBuilder(data)
                 .type(EntityType.BULLET)
-                .viewWithBBox(new Rectangle(10, 10, Color.BLUE))
+                .viewWithBBox(FXGL.getAssetLoader().loadTexture("bullet.png", 40, 40))
                 .with(new CollidableComponent(true))
-                .with(new ProjectileComponent(new Point2D(25, 0), 800))
+                .with(new ProjectileComponent(new Point2D(25, 0), 900))
                 //.with(physics)
                 //.with(new ExpireCleanComponent(Duration.seconds(4)))
                 .build();
+
     }
 }
