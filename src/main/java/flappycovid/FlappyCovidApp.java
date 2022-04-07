@@ -5,6 +5,7 @@ import com.almasb.fxgl.animation.Interpolators;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.app.MenuItem;
+import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.physics.BoundingShape;
@@ -16,11 +17,10 @@ import javafx.scene.text.Text;
 import javafx.util.Duration;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-
-import java.util.function.Consumer;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 import static flappycovid.EntityType.PLAYER1;
@@ -40,10 +40,11 @@ public class FlappyCovidApp extends GameApplication {
     private Entity player1;
     private Entity player2;
 
+    private double scorePlayer1 = 0;
+    private double scorePlayer2 = 0;
+
     private boolean player1_alive = true;
     private boolean player2_alive = true;
-
-    private boolean record_score = false;
 
     private String player1_name = "";
     private String player2_name = "";
@@ -68,7 +69,6 @@ public class FlappyCovidApp extends GameApplication {
 
         settings.getAchievements().add(new Achievement("user_name", "description", "", 0));
         settings.getAchievements().add(new Achievement("other_user_name", "description", "", 1));
-
     }
 
     protected void initInput() {
@@ -109,6 +109,10 @@ public class FlappyCovidApp extends GameApplication {
                 }
             }
         }, KeyCode.RIGHT); // maps to D key PLAYER 2
+
+        FXGL.onKey(KeyCode.TAB, () -> {
+            getDialogService().showMessageBox(String.join("\n", getHighscores()));
+        });
     }
 
     @Override
@@ -147,14 +151,10 @@ public class FlappyCovidApp extends GameApplication {
     }
 
     public void initLogin() {
-        getDialogService().showConfirmationBox("Do you want your score to be recorded?", answer -> {
-            logged_in = true;
-            initSession();
-            System.out.println(answer);
-        });
-
         getDialogService().showInputBox("Please input player 2 name.", name -> {
             setPlayer2Name(name);
+            logged_in = true;
+            initSession();
         });
 
         getDialogService().showInputBox("Please input player 1 name.", name -> {
@@ -237,24 +237,6 @@ public class FlappyCovidApp extends GameApplication {
         }
     }
 
-    private void restart() {
-        logged_in = false;
-        player1_alive = true;
-        player2_alive = true;
-
-        killSession();
-
-        getGameController().startNewGame();
-    }
-
-    private void retry() {
-        player1_alive = true;
-        player2_alive = true;
-
-        logged_in = false;
-        getGameController().startNewGame();
-    }
-
     @Override
     protected void onUpdate(double tpf) {
         if (!logged_in) {
@@ -265,10 +247,12 @@ public class FlappyCovidApp extends GameApplication {
         }
 
         if (player1_alive) {
+            scorePlayer1++;
             inc("scorePlayer1", +1); // if their alive, increase theyre score by 0.1
         }
 
         if (player2_alive) {
+            scorePlayer2++;
             inc("scorePlayer2", +1); // if their alive, increase theyre score by 0.1
         }
 
@@ -286,16 +270,71 @@ public class FlappyCovidApp extends GameApplication {
 
 
         if (!player1_alive && !player2_alive) { // reset game, both players area dead.
-            getDialogService().showConfirmationBox("Do you want to retry", yes ->
+            getDialogService().showConfirmationBox("Do you want to save your highscores?", yes ->
             {
                 if (yes) {
-                    retry();
+                    saveScore();
                 } else {
-                    restart();
+                    promptRetry();
                 }
             });
 
         }
+    }
+
+    private void promptRetry() {
+        getDialogService().showConfirmationBox("Do you want to retry", save ->
+        {
+            if (save) {
+                retry();
+            } else {
+                restart();
+            }
+        });
+    }
+
+    private void saveScore() {
+        try {
+            FileWriter fileWriter = new FileWriter("highscores.txt", true);
+            PrintWriter printwriter = new PrintWriter(fileWriter);
+            printwriter.println("Score: " + scorePlayer1 + " achieved by " + player1_name);
+            printwriter.println("Score: " + scorePlayer2 + " achieved by " + player2_name);
+            printwriter.close();
+
+            promptRetry();
+        } catch (IOException err) {
+            System.out.println(err);
+        }
+    }
+
+    private List getHighscores() {
+        try {
+            List<String> list = Files.readAllLines(Paths.get("highscores.txt"), StandardCharsets.UTF_8);
+            String[] highscores = list.toArray(new String[list.size()]);
+
+            return List.of(highscores);
+        } catch (IOException err) {
+            System.out.println(err);
+        }
+        return null;
+    }
+
+    private void restart() {
+        logged_in = false;
+        player1_alive = true;
+        player2_alive = true;
+
+        killSession();
+
+        getGameController().startNewGame();
+    }
+
+    private void retry() {
+        player1_alive = true;
+        player2_alive = true;
+
+        logged_in = false;
+        getGameController().startNewGame();
     }
 
     private void initPlayers() {
