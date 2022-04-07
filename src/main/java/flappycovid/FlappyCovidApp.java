@@ -75,6 +75,11 @@ public class FlappyCovidApp extends GameApplication {
         settings.getAchievements().add(new Achievement("other_user_name", "description", "", 1));
     }
 
+    @Override
+    protected void onPreInit() {
+        loopBGM("theme_soundtrack.wav");
+    }
+
     protected void initInput() {
         getInput().addAction(new UserAction("JumpPlayer1") {
             @Override
