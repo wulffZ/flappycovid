@@ -375,12 +375,21 @@ public class FlappyCovidApp extends GameApplication {
         spawnWithScale(player2, Duration.seconds(0.86), Interpolators.BOUNCE.EASE_OUT());
     }
 
+
+//    private void shootPlayer1(Entity entity) {
+//        EntityType entity_type = (EntityType) entity.getType();
+//        if (entity_type == PLAYER1) {
+//            player1_alive = true;
+//            spawn("bullet", player1.getPosition().add(70, 90));
+//        }
+//    }
+
     private void shootPlayer1() {
-        spawn("bullet", player1.getPosition().add(70, 0));
+        spawn("bullet", player1.getPosition().add(70, 90));
     }
 
     private void shootPlayer2() {
-        spawn("bullet", player2.getPosition().add(70, 0));
+        spawn("bullet", player2.getPosition().add(70, 50));
     }
 
     public void kill(Entity entity) {
