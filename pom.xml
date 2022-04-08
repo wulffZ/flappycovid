@@ -39,7 +39,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>FlappyCovidApp</mainClass>
+                            <mainClass>flappycovid.FlappyCovidApp</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
