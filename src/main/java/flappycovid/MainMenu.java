@@ -42,7 +42,7 @@ public class MainMenu extends FXGLMenu {
     private void createBackground() {
         Background background = new Background(
                 new BackgroundImage(
-                        new Image("assets/textures/background.png", FXGL.getAppWidth(), FXGL.getAppHeight(),
+                        new Image("assets/textures/home_menu_background.png", FXGL.getAppWidth(), FXGL.getAppHeight(),
                                 false, true),
                         BackgroundRepeat.NO_REPEAT,
                         BackgroundRepeat.NO_REPEAT,
