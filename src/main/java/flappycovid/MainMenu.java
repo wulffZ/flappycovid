@@ -52,6 +52,7 @@ public class MainMenu extends FXGLMenu {
         getContentRoot().setBackground(background);
     }
 
+
     private void start() {
         getGameController().startNewGame();
     }
